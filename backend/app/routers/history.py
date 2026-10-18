@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from ..database import get_db
-from ..models import ScanRecord, HistoryItem, Indicator, Recommendation
+from ..models import ScanRecord, HistoryItem, Indicator, Recommendation, User
+from ..auth import get_current_user_optional
 
 router = APIRouter(prefix="/api/history", tags=["History"])
 
@@ -13,12 +14,16 @@ def get_scan_history(
     risk_level: Optional[str] = Query(None, description="Filter by risk level: High, Medium, Low"),
     scan_type: Optional[str] = Query(None, description="Filter by scan type: url, message"),
     search: Optional[str] = Query(None, description="Search in content preview"),
+    only_mine: bool = Query(False, description="Show only scans created by current user"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     query = db.query(ScanRecord)
     
+    if current_user and only_mine:
+        query = query.filter(ScanRecord.user_id == current_user.id)
     if risk_level:
         query = query.filter(ScanRecord.risk_level.ilike(risk_level))
     if scan_type:

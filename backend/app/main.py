@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import init_db
-from .routers import scan, history, guidance
+from .routers import scan, history, guidance, auth
 
 # Initialize database schema on module load
 init_db()
@@ -22,6 +22,7 @@ app.add_middleware(
 )
 
 # Mount API routers
+app.include_router(auth.router)
 app.include_router(scan.router)
 app.include_router(history.router)
 app.include_router(guidance.router)

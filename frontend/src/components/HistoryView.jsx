@@ -5,13 +5,14 @@ import {
 } from 'lucide-react';
 import { getScanHistory, deleteScanRecord, clearAllHistory, getSystemStats } from '../services/api';
 
-export default function HistoryView({ onViewDetails }) {
+export default function HistoryView({ onViewDetails, currentUser, onOpenAuth }) {
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [riskFilter, setRiskFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [onlyMine, setOnlyMine] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   const fetchRecords = async () => {
@@ -22,6 +23,7 @@ export default function HistoryView({ onViewDetails }) {
           risk_level: riskFilter || undefined,
           scan_type: typeFilter || undefined,
           search: search || undefined,
+          only_mine: onlyMine,
         }),
         getSystemStats().catch(() => null),
       ]);
@@ -36,7 +38,7 @@ export default function HistoryView({ onViewDetails }) {
 
   useEffect(() => {
     fetchRecords();
-  }, [riskFilter, typeFilter]);
+  }, [riskFilter, typeFilter, onlyMine]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -138,6 +140,20 @@ export default function HistoryView({ onViewDetails }) {
             <option value="message">Messages Only</option>
           </select>
 
+          {currentUser && (
+            <button
+              type="button"
+              onClick={() => setOnlyMine(!onlyMine)}
+              className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                onlyMine
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/20'
+                  : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+              }`}
+            >
+              {onlyMine ? 'Only My Scans' : 'All Scans'}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={fetchRecords}
@@ -159,6 +175,20 @@ export default function HistoryView({ onViewDetails }) {
           )}
         </div>
       </div>
+
+      {/* Guest Banner if not signed in */}
+      {!currentUser && (
+        <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
+          <span>Browsing as Guest. Sign in or create an account to save personal scans to your security profile.</span>
+          <button
+            type="button"
+            onClick={onOpenAuth}
+            className="text-cyan-400 hover:text-cyan-300 font-bold shrink-0 cursor-pointer self-start sm:self-auto"
+          >
+            Sign In / Register →
+          </button>
+        </div>
+      )}
 
       {/* History Records Table / List */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden">

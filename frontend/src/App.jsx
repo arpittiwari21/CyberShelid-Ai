@@ -5,9 +5,16 @@ import ResultView from './components/ResultView';
 import SafetyDashboard from './components/SafetyDashboard';
 import HistoryView from './components/HistoryView';
 import PrivacyModal from './components/PrivacyModal';
+import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
-import { scanContent, checkHealth } from './services/api';
-import { ShieldCheck, AlertCircle } from 'lucide-react';
+import { 
+  scanContent, 
+  checkHealth, 
+  getCurrentUser, 
+  fetchCurrentUser, 
+  clearAuthSession 
+} from './services/api';
+import { ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('scanner');
@@ -16,8 +23,11 @@ export default function App() {
   const [error, setError] = useState(null);
   const [backendOnline, setBackendOnline] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [authNotice, setAuthNotice] = useState(null);
 
-  // Initial and periodic backend health check
+  // Initial and periodic backend health check & user profile refresh
   useEffect(() => {
     const ping = () => {
       checkHealth()
@@ -26,8 +36,27 @@ export default function App() {
     };
     ping();
     const interval = setInterval(ping, 10000);
+
+    // Verify current user session if token exists
+    fetchCurrentUser().then((u) => {
+      if (u) setCurrentUser(u);
+    });
+
     return () => clearInterval(interval);
   }, []);
+
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    setAuthNotice(`Signed in successfully as ${user.username} (${user.role})`);
+    setTimeout(() => setAuthNotice(null), 4000);
+  };
+
+  const handleLogout = () => {
+    clearAuthSession();
+    setCurrentUser(null);
+    setAuthNotice("Signed out of your account.");
+    setTimeout(() => setAuthNotice(null), 3000);
+  };
 
   const handleScan = async (inputType, content) => {
     setLoading(true);
@@ -65,10 +94,29 @@ export default function App() {
         }}
         onOpenPrivacy={() => setPrivacyOpen(true)}
         backendOnline={backendOnline}
+        currentUser={currentUser}
+        onOpenAuth={() => setAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Auth Notice Toast */}
+        {authNotice && (
+          <div className="mb-6 p-3 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-200 text-xs flex items-center justify-between animate-fadeIn">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>{authNotice}</span>
+            </div>
+            <button
+              onClick={() => setAuthNotice(null)}
+              className="text-cyan-400 hover:text-white text-xs font-bold px-2 py-0.5"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Global Error Banner */}
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs flex items-center justify-between">
@@ -88,7 +136,6 @@ export default function App() {
         {/* Tab 1: Scanner View */}
         {activeTab === 'scanner' && (
           <div className="space-y-8">
-            {/* If result is present, display ResultView; else display ScannerCard */}
             {scanResult ? (
               <ResultView result={scanResult} onReset={handleReset} />
             ) : (
@@ -97,7 +144,7 @@ export default function App() {
                 <div className="text-center max-w-2xl mx-auto space-y-2">
                   <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 text-xs font-semibold">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Rule-Based Phishing & Fraud Analysis Engine</span>
+                    <span>Rule-Based & ML-Powered Fraud Detection</span>
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                     Spot Cyber Threats Before They Strike
@@ -122,6 +169,8 @@ export default function App() {
         {/* Tab 3: Scan History */}
         {activeTab === 'history' && (
           <HistoryView
+            currentUser={currentUser}
+            onOpenAuth={() => setAuthModalOpen(true)}
             onViewDetails={(item) => {
               setScanResult({
                 id: item.id,
@@ -150,6 +199,13 @@ export default function App() {
       <PrivacyModal
         isOpen={privacyOpen}
         onClose={() => setPrivacyOpen(false)}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
       />
     </div>
   );

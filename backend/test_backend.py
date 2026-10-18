@@ -107,8 +107,46 @@ def test_api_endpoints():
     assert del_res.status_code == 200
     print(f"API Delete record #{record_id} [PASSED]")
 
+def test_auth_endpoints():
+    print("Testing Auth endpoints (Register, Login, Me)...")
+    username = "test_user_auth"
+    email = "auth_tester@example.com"
+    password = "TestPassword99!"
+
+    # 1. Register
+    reg_res = client.post("/api/auth/register", json={
+        "username": username,
+        "email": email,
+        "password": password,
+        "role": "Online Shoppers"
+    })
+    # If user already registered in previous test run, status can be 200 or 400
+    if reg_res.status_code == 400:
+        pass
+    else:
+        assert reg_res.status_code == 200
+        assert "access_token" in reg_res.json()
+        print("Register endpoint verified [PASSED]")
+
+    # 2. Login
+    login_res = client.post("/api/auth/login", json={
+        "login": username,
+        "password": password
+    })
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+    assert token is not None
+    print("Login endpoint verified [PASSED]")
+
+    # 3. Me profile with Bearer token
+    me_res = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me_res.status_code == 200
+    assert me_res.json()["username"] == username
+    print("Me profile endpoint verified [PASSED]")
+
 if __name__ == "__main__":
     test_url_detector()
     test_message_detector_slide_example()
     test_api_endpoints()
+    test_auth_endpoints()
     print("\nALL BACKEND AUTOMATED TESTS PASSED SUCCESSFULLY! [OK]")

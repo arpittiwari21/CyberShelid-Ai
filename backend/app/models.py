@@ -6,10 +6,21 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(120), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="General Internet User")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class ScanRecord(Base):
     __tablename__ = "scan_history"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, nullable=True, index=True)
     scan_type = Column(String(20), nullable=False)  # "url" or "message"
     content_preview = Column(String(255), nullable=False)
     risk_level = Column(String(20), nullable=False)  # "Low", "Medium", "High"
@@ -72,3 +83,25 @@ class SystemStats(BaseModel):
     low_risk_count: int
     url_scans_count: int
     message_scans_count: int
+
+class UserRegister(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(..., min_length=5, max_length=120)
+    password: str = Field(..., min_length=6, max_length=100)
+    role: Optional[str] = Field(default="General Internet User")
+
+class UserLogin(BaseModel):
+    login: str = Field(..., description="Username or email address")
+    password: str = Field(..., min_length=1)
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+    created_at: str
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut

@@ -1,14 +1,16 @@
 import json
 import re
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import ScanRecord, ScanRequest, ScanResponse, SystemStats, MLAnalysis
+from ..models import ScanRecord, ScanRequest, ScanResponse, SystemStats, MLAnalysis, User
 from ..detectors.url_detector import analyze_url
 from ..detectors.message_detector import analyze_message
 from ..detectors.scoring import evaluate_risk
 from ..detectors.ml_classifier import predict_ml_threat
+from ..auth import get_current_user_optional
 
 router = APIRouter(prefix="/api", tags=["Scanner"])
 
@@ -36,7 +38,11 @@ def sanitize_preview(content: str) -> str:
     return text
 
 @router.post("/scan", response_model=ScanResponse)
-def scan_content(req: ScanRequest, db: Session = Depends(get_db)):
+def scan_content(
+    req: ScanRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     content = req.content.strip()
     if not content:
         raise HTTPException(status_code=400, detail="Input content cannot be empty.")
@@ -79,6 +85,7 @@ def scan_content(req: ScanRequest, db: Session = Depends(get_db)):
 
     # Save to SQLite database
     record = ScanRecord(
+        user_id=current_user.id if current_user else None,
         scan_type=input_type,
         content_preview=preview,
         risk_level=risk_level,
