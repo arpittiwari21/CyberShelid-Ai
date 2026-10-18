@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cybershield-ai
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PYTHONUNBUFFERED
+        value: "1"

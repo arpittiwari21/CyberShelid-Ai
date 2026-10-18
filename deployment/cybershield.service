@@ -1,0 +1,15 @@
+[Unit]
+Description=CyberShield AI - Intelligent Cybersecurity & Fraud Detection Service
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/cybershield/backend
+Environment="PATH=/var/www/cybershield/backend/venv/bin"
+ExecStart=/var/www/cybershield/backend/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 127.0.0.1:8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
