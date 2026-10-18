@@ -38,3 +38,9 @@
   - [x] 6.3 Render.com 1-click cloud configuration (`render.yaml`)
   - [x] 6.4 Linux VPS production configuration (Nginx reverse proxy + Systemd service)
   - [x] 6.5 Production deployment guide ([`DEPLOYMENT.md`](file:///d:/cybershelid/DEPLOYMENT.md))
+- [x] **Phase 7**: User Authentication & Persona Profiles
+  - [x] 7.1 Cryptographic PBKDF2-HMAC-SHA256 password hashing (100,000 rounds)
+  - [x] 7.2 HMAC-SHA256 Bearer JWT session token generator and validator
+  - [x] 7.3 Auth REST API (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`)
+  - [x] 7.4 Interactive `AuthModal.jsx` with Sign In / Register tabs and 1-click Demo Fill
+  - [x] 7.5 User-scoped SQLite scan history with "Only My Scans" toggle
