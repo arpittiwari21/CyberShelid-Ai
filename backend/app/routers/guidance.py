@@ -89,13 +89,15 @@ TARGET_PERSONAS_GUIDANCE = [
             "Password reset emails for services you never requested.",
             "Tech support popups screaming 'Virus detected! Call Microsoft toll-free now'.",
             "Social media direct messages offering cryptocurrency investment schemes or claiming to have compromising web camera footage.",
-            "Unsolicited WhatsApp or Telegram messages offering easy money for liking YouTube videos."
+            "Unsolicited WhatsApp or Telegram messages offering easy money for liking YouTube videos.",
+            "Fake brand mirror websites (e.g. Netmirror, clone streaming portals) offering free movies that deploy malvertising, push rogue APKs, and harvest credit cards via fake age-verification forms."
         ],
         "key_rules": [
             "Use a dedicated password manager and create unique, 14+ character passphrases for each online service.",
             "Enable authenticator-app-based Two-Factor Authentication (2FA) wherever supported.",
             "Never trust browser popups claiming your computer is infected; browsers cannot detect system malware.",
-            "Treat unexpected urgent messages with healthy skepticism: stop, verify, and question the request."
+            "Treat unexpected urgent messages with healthy skepticism: stop, verify, and question the request.",
+            "Never enter payment or login credentials on unofficial streaming mirrors; use only verified authentic entertainment providers."
         ],
         "example_scam": "Apple Support: Your iCloud ID has been locked due to suspicious activity. Verify identity within 2 hours at http://apple-id-recovery-team.com"
     }
@@ -106,6 +108,11 @@ THREAT_INDICATOR_KNOWLEDGE = [
         "category": "Domain & URL Anatomy",
         "concept": "TLD & Subdomain Spoofing",
         "explanation": "Scammers abuse cheap or free top-level domains (.xyz, .top, .buzz) and stack subdomains (e.g. paypal.com.auth-server.xyz) so the familiar brand appears at the start while the actual destination is controlled by the attacker."
+    },
+    {
+        "category": "Deception Tactics",
+        "concept": "Fake Brand Mirrors & Streaming Clones",
+        "explanation": "Unauthorized clone portals (such as Netmirror) mimic legitimate entertainment platforms to lure users with free content, then expose them to intrusive malvertising, drive-by malware downloads, and fake payment verification gates."
     },
     {
         "category": "Psychological Manipulation",

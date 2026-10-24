@@ -15,8 +15,26 @@ SUSPICIOUS_TLDS = {
     "xyz", "top", "buzz", "club", "tk", "ml", "ga", "cf", "gq",
     "work", "icu", "cam", "live", "loan", "vip", "rest", "fit",
     "surf", "click", "link", "stream", "date", "racing", "download",
-    "bid", "country", "review", "accountant", "science", "party"
+    "bid", "country", "review", "accountant", "science", "party",
+    "to", "pe", "is", "ws", "su", "cx", "pw", "cc", "rip"
 }
+
+# Known fake mirror, pirate streaming clones, and deceptive media networks
+KNOWN_FAKE_MIRRORS = {
+    "netmirror", "net-mirror", "netflixmirror", "netflix-mirror",
+    "123movies", "fmovies", "soap2day", "flixtor", "myflixer",
+    "cineb", "lookmovie", "streamlord", "putlocker", "solarmovie",
+    "gomovies", "vumoo", "primewire", "bflix", "watchseries", "hdtoday",
+    "hdmovie2", "tamilrockers", "filmywap", "bolly4u", "9xmovies"
+}
+
+# Regex patterns for deceptive mirror & pirate clone domains
+FAKE_MIRROR_PATTERNS = [
+    (r"net[\s\-_.]?mirror", "Netmirror Pirate / Mirror Network"),
+    (r"(netflix|amazon|prime|disney|hulu|hotstar|hbo|apple|paramount|ott)[\s\-_.]?(mirror|clone|rip|crack|leak|watchfree)", "Deceptive Streaming Brand Mirror"),
+    (r"(mirror|clone|free|watch|pirate|rip)[\s\-_.]?(netflix|prime|disney|hotstar|hulu|hbo)", "Unauthorized Entertainment Clone"),
+    (r"(free[\-_]?movies?|watch[\-_]?series|stream[\-_]?hd|movie[\-_]?mirror|pirate[\-_]?stream|unblock[\-_]?stream)", "Illicit Pirate Streaming / Media Clone Portal")
+]
 
 # Target brand names often impersonated in phishing attacks
 TARGET_BRANDS = [
@@ -247,6 +265,31 @@ def analyze_url(url_string: str) -> Dict[str, Any]:
             "evidence": f"Length: {len(clean_url)} chars"
         })
         detected_patterns.append("excessive_url_length")
+
+    # 12. Deceptive Fake Mirror & Pirate Streaming Detection (e.g. Netmirror, clone portals)
+    matched_fake_mirror = None
+    # Check known names in hostname or full clean_url
+    for fake in KNOWN_FAKE_MIRRORS:
+        if fake in hostname or fake in clean_url.lower():
+            matched_fake_mirror = fake
+            break
+
+    # Check pattern matches
+    if not matched_fake_mirror:
+        for pattern, label in FAKE_MIRROR_PATTERNS:
+            if re.search(pattern, hostname) or re.search(pattern, clean_url.lower()) or re.search(pattern, path):
+                matched_fake_mirror = label
+                break
+
+    if matched_fake_mirror:
+        indicators.append({
+            "name": "Deceptive Fake Mirror / Pirate Streaming Website",
+            "severity": "high",
+            "category": "Impersonation",
+            "description": f"The target ({hostname or clean_url}) is identified as an unauthorized media mirror / clone network ({matched_fake_mirror}). These rogue platforms operate under false branding, deliver high volumes of intrusive malvertising/popups, and frequently employ deceptive forms (such as fake 'Free VIP' or 'Age Verification' gates) to harvest payment credentials and distribute rogue APKs/malware.",
+            "evidence": hostname or clean_url
+        })
+        detected_patterns.append("fake_mirror_website")
 
     return {
         "hostname": hostname,

@@ -46,6 +46,15 @@ FRAUD_OFFER_PATTERNS = [
     (r"\b(inaam|lottery\s+lagi|ghar\s+baithe\s+kamayein|bina\s+investment)\b", "Fraudulent Lottery / Income Bait (Multilingual/Hinglish)")
 ]
 
+# Fake mirror, pirate streaming, and unauthorized content download lures
+FAKE_MIRROR_PATTERNS = [
+    (r"\b(net\s*mirror|netmirror(\.(app|pe|to|io|cc|com|xyz|me|org|fun))?)\b", "Netmirror / Unauthorized Brand Mirror Network"),
+    (r"\b(mirror\s+(website|site|portal|link)|pirated?\s+(movies?|content|shows?|series))\b", "Illicit Mirror / Pirated Media Platform"),
+    (r"\b(free\s+(netflix|hotstar|prime|disney|ott)\s*(movies?|shows?|series|subscription|account|login)?)\b", "Fake Free Streaming / Subscription Lure"),
+    (r"\b(watch\s+free\s+(latest\s+)?(movies?|series|shows?)|download\s+free\s+(movie|apk|series))\b", "Unverified Media / Rogue APK Download"),
+    (r"\b(bina\s+subscription\s+(dekh|movie|netflix)|free\s+me\s+movie\s+dekh)\b", "Pirate Streaming Bait (Multilingual/Hinglish)")
+]
+
 def extract_urls(text: str) -> List[str]:
     """Extracts all HTTP/HTTPS links and bare domains from plain text."""
     url_pattern = r"(https?://[^\s<>\"]+|www\.[^\s<>\"]+|[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-z]{2,}(?:/[^\s<>\"]*)?)"
@@ -160,6 +169,21 @@ def analyze_message(message_text: str) -> Dict[str, Any]:
             "evidence": "KYC update / expiration claim"
         })
         detected_patterns.append("kyc_fraud_narrative")
+
+    # 7. Fake Mirror / Unauthorized Pirate Streaming Detection
+    for pattern, rule_title in FAKE_MIRROR_PATTERNS:
+        match = re.search(pattern, text_lower)
+        if match:
+            matched_phrase = match.group(0)
+            indicators.append({
+                "name": rule_title,
+                "severity": "high",
+                "category": "Deceptive Tactics",
+                "description": f"The submission references an unauthorized fake mirror / pirated streaming site ('{matched_phrase}'). Attackers and piracy rings utilize fake OTT mirrors to distribute adware, collect payment details under the guise of free trials or age verification, or deliver rogue APKs.",
+                "evidence": matched_phrase
+            })
+            detected_patterns.append("fake_mirror_website")
+            break
 
     return {
         "text": clean_text,

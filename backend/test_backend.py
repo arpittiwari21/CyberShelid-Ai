@@ -11,6 +11,7 @@ from app.main import app
 from app.detectors.url_detector import analyze_url
 from app.detectors.message_detector import analyze_message
 from app.detectors.scoring import evaluate_risk
+from app.detectors.ml_classifier import predict_ml_threat
 
 client = TestClient(app)
 
@@ -144,7 +145,37 @@ def test_auth_endpoints():
     assert me_res.json()["username"] == username
     print("Me profile endpoint verified [PASSED]")
 
+def test_netmirror_detection():
+    print("Testing Netmirror fake website detection...")
+    targets = [
+        "https://netmirror.app",
+        "netmirror.pe",
+        "netmirror.to",
+        "net-mirror.com",
+        "net mirror website",
+        "net mirror"
+    ]
+    for target in targets:
+        # Test URL detector
+        url_res = analyze_url(target)
+        u_risk, u_score, _, recs = evaluate_risk(url_res["indicators"], url_res["detected_patterns"], "url")
+        assert u_risk == "High", f"{target} expected High URL risk, got {u_risk} ({u_score})"
+        assert u_score >= 80, f"{target} expected URL score >= 80, got {u_score}"
+        
+        # Test Message detector
+        msg_res = analyze_message(target)
+        m_risk, m_score, _, _ = evaluate_risk(msg_res["indicators"], msg_res["detected_patterns"], "message")
+        assert m_risk == "High", f"{target} expected High MSG risk, got {m_risk} ({m_score})"
+        assert m_score >= 80, f"{target} expected MSG score >= 80, got {m_score}"
+        
+        # Test ML classifier
+        ml_res = predict_ml_threat(target)
+        assert ml_res["ml_risk"] == "High" or ml_res["ml_score"] >= 65, f"{target} ML score {ml_res['ml_score']} too low"
+        print(f"  Verified {target} -> URL Risk: {u_risk} ({u_score}), ML: {ml_res['ml_risk']} ({ml_res['ml_score']})")
+    print("Netmirror tests for all URL, domain, and message variants [PASSED]")
+
 if __name__ == "__main__":
+    test_netmirror_detection()
     test_url_detector()
     test_message_detector_slide_example()
     test_api_endpoints()

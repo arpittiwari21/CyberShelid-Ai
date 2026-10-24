@@ -33,9 +33,14 @@ def evaluate_risk(
     ):
         score += 15
 
-    # Direct IP or brand typosquatting automatically warrants high alert
-    if "ip_hostname" in patterns_set or "brand_typosquatting" in patterns_set or any("impersonation_" in p for p in patterns_set):
-        score = max(score, 75)
+    # Direct IP, brand typosquatting, or fake mirror sites automatically warrant high alert
+    if (
+        "ip_hostname" in patterns_set or
+        "brand_typosquatting" in patterns_set or
+        "fake_mirror_website" in patterns_set or
+        any("impersonation_" in p for p in patterns_set)
+    ):
+        score = max(score, 88 if "fake_mirror_website" in patterns_set else 75)
 
     # Clamp score strictly between 0 and 100
     if not indicators:
@@ -51,7 +56,13 @@ def evaluate_risk(
         risk_level = "Low"
 
     # Executive Summary explanation
-    if risk_level == "High":
+    if "fake_mirror_website" in patterns_set:
+        summary = (
+            "High Risk Unauthorized Mirror / Clone Portal Detected. The submission connects to or references "
+            "an illicit mirror network (such as Netmirror) designed to mimic legitimate streaming platforms. "
+            "Such sites present extreme risks of aggressive malvertising, rogue APK downloads, and payment credential theft."
+        )
+    elif risk_level == "High":
         summary = (
             "High Risk Threat Detected. The submission demonstrates active phishing or fraud indicators "
             "designed to harvest sensitive credentials, exploit urgency, or lead to deceptive infrastructure."
@@ -99,6 +110,19 @@ def evaluate_risk(
         recommendations.append({
             "title": "Verify through official contact channels",
             "action": "Contact the organization directly using the customer service telephone number printed on your physical bank card or official billing statement — NOT the phone number provided in the message.",
+            "priority": "warning"
+        })
+
+    # Fake mirror / unauthorized pirate streaming countermeasure
+    if "fake_mirror_website" in patterns_set:
+        recommendations.append({
+            "title": "Avoid fake mirror websites and pirated streaming clones",
+            "action": "Netmirror and illicit streaming clones infringe intellectual property and frequently host deceptive advertising, rogue APK download prompts, and fake age/VIP verification forms designed to steal payment card credentials.",
+            "priority": "critical"
+        })
+        recommendations.append({
+            "title": "Use verified, licensed entertainment platforms",
+            "action": "Access television series and movies exclusively through authentic providers (e.g., Netflix, Amazon Prime, Disney+, Apple TV) via their verified official domains or authorized app store applications.",
             "priority": "warning"
         })
 

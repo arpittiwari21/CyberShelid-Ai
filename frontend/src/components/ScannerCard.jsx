@@ -23,6 +23,11 @@ const DEMO_SAMPLES = [
     text: "http://chase-security-check.xyz/account/login"
   },
   {
+    label: "Fake Brand Mirror (Netmirror)",
+    type: "url",
+    text: "https://netmirror.app"
+  },
+  {
     label: "Legitimate Official Portal",
     type: "url",
     text: "https://www.google.com"
