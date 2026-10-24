@@ -43,12 +43,12 @@ COPY --from=frontend-builder /build/dist ./frontend/dist
 # Create a dedicated directory for persistent SQLite storage
 RUN mkdir -p /app/backend/data
 
-# Expose production port
-EXPOSE 8000
+# Expose production ports (8000 for standard/local, 10000 for Render)
+EXPOSE 8000 10000
 
-# Health check endpoint
+# Health check endpoint dynamically matching $PORT
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://127.0.0.1:8000/api/health || exit 1
+  CMD curl -f http://127.0.0.1:${PORT:-8000}/api/health || exit 1
 
 # Launch production server via Uvicorn (supporting dynamic $PORT on Render/Cloud)
 WORKDIR /app/backend
